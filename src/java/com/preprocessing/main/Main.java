@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.preprocessing.data.VoltageRecords;
 import com.preprocessing.file.FileHandler;
 import com.preprocessing.methods.BaselineWanderRemoval;
+import com.preprocessing.methods.QRSSegmentation;
 
 public class Main {
 
@@ -18,12 +19,14 @@ public class Main {
 		}
 		
 		VoltageRecords bwData = BaselineWanderRemoval.removeBaselineWander(sampleData, 512f, 5f);
-		
+
 		try {
 			FileHandler.saveData(bwData);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		QRSSegmentation.segmentQRSComplexes(bwData);
 	}
 
 }
