@@ -17,7 +17,9 @@ public class QRSSegmentation {
 	 * @param data
 	 */
 	public static void segmentQRSComplexes(VoltageRecords data) {
-		new File("src\\resources\\seg").mkdir();
+		File file = new File("src\\resources\\seg");
+		file.delete();
+		file.mkdir();
 
 		float[] timestamps = data.getTimestamps();
 		float[] voltages = data.getVoltages();
@@ -185,7 +187,7 @@ public class QRSSegmentation {
 	 * @param data
 	 * @return { Q1, Median, Q3, Min, Max }
 	 */
-	private static float[] getStats(float[] data) {
+	public static float[] getStats(float[] data) {
 		List<Float> vData = new ArrayList<Float>();
 		for (float f : data) {
 			vData.add(f);

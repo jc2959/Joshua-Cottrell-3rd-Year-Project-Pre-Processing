@@ -7,4 +7,8 @@ public interface Saveable {
 	
 	public void loadData(String fileData);
 	
+	public void setAmountOfData(int amount);
+	
+	public void addLine(int index, String line);
+	
 }

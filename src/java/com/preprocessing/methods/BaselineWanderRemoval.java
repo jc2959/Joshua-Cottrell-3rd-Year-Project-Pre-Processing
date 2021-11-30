@@ -48,7 +48,7 @@ public class BaselineWanderRemoval {
 
 		}
 
-		// Normalises the new data
+//		 Normalises the new data
 		for (int i = 0; i < bwVoltages.length; i++) {
 			bwVoltages[i] = (bwVoltages[i] - min) / (max - min);
 		}

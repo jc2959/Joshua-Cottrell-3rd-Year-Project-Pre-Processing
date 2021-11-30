@@ -12,6 +12,21 @@ public class VoltageRecords implements Saveable {
 	public VoltageRecords(String filename) {
 		this.filename = filename;
 	}
+	
+	public void setAmountOfData(int amount) {
+		this.timestamps = new float[amount];
+		this.voltages = new float[amount];
+	}
+	
+	public void addLine(int index, String line) {
+		String[] data = line.split(",");
+		
+		float ts = Float.parseFloat(data[0]);
+		float voltage = Float.parseFloat(data[1]);
+		
+		timestamps[index] = ts;
+		voltages[index] = voltage;
+	}
 
 	public void setTimestamps(float[] timestamps) {
 		this.timestamps = timestamps;
