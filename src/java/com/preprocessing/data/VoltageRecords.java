@@ -79,5 +79,9 @@ public class VoltageRecords implements Saveable {
 		}
 
 	}
+	
+	@Override
+	public void completeLoad() {
+	}
 
 }

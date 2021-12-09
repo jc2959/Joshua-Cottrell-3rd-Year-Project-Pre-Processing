@@ -13,8 +13,10 @@ import java.util.stream.Stream;
 
 public class FileHandler {
 
+	public static String dirPath = "";
+	
 	public static void loadData(Saveable s) throws IOException {
-		String path = "src\\resources\\" + s.getFilename();
+		String path = dirPath + s.getFilename();
 		File file = new File(path);
 		
 		BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -28,42 +30,29 @@ public class FileHandler {
 		
 		int ctr = 0;
 		
-		float inc = 0.01f;
-		int thng = (int) (lineCount * inc);
-		
 		s.setAmountOfData((int) lineCount);
-		
-		System.out.println("0s: 0%");
-		
-		long ts = System.currentTimeMillis();
 		
 		while (line != null && line != "") {
 			s.addLine(ctr, line);
 			
-			if ((ctr + 1) % thng == 0) {
-				float perc = 100 * inc * (ctr + 1) / thng;
-				
-				long sec = (System.currentTimeMillis() - ts) / 1000;
-				
-				System.out.println(sec + "s: " + perc + "%");
-			}
-			
 			ctr += 1;
 			line = reader.readLine();
 		}
+		
+		s.completeLoad();
 		
 		reader.close();
 		
 	}
 	
 	public static void saveData(Saveable s) throws IOException {
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File("src\\resources\\" + s.getFilename())));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(dirPath + s.getFilename())));
 		writer.write(s.getData());
 		writer.close();
 	}
 	
 	public static void saveBinaryData(String filename, byte[] binaryData) throws IOException {
-		File file = new File("src\\resources\\bin\\" + filename);
+		File file = new File(dirPath + "bin\\" + filename);
 		file.createNewFile();
 		
 		FileOutputStream outstream = new FileOutputStream(file);

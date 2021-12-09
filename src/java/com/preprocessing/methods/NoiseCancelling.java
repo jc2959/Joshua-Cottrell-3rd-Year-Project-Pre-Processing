@@ -38,7 +38,7 @@ public class NoiseCancelling {
 		}
 
 		float[] lp = vs.clone();
-		for (int n = 0; n < 4; n++) {
+		for (int n = 0; n < 3; n++) {
 			float[] tmp = new float[lp.length];
 
 			for (int i = 0; i < voltages.length; i++) {
@@ -47,9 +47,9 @@ public class NoiseCancelling {
 				tmp[i] = lpVal;
 			}
 
-			lp = tmp;
+			lp = softThreshold(tmp);
 		}
-
+		
 		float max = Float.MIN_VALUE;
 		float min = Float.MAX_VALUE;
 
@@ -108,4 +108,53 @@ public class NoiseCancelling {
 		return val;
 	}
 
+	private static float[] softThreshold(float[] data) {
+		float stdev = getSTDev(data);
+		
+		float coef = (float) Math.sqrt(2 * Math.log(data.length));
+		float threshold = stdev * 0.025f;
+		
+		float[] newData = new float[data.length];
+		
+		for (int i = 0; i < data.length; i++) {
+			float val = data[i];
+			
+			if (Math.abs(val) >= threshold) {
+				newData[i] = val - sign(val) * threshold;
+			}
+		}
+		
+		return newData;
+	}
+	
+	private static float sign(float x) {
+		return x > 0 ? 1 : x < 0 ? -1 : 0;
+	}
+	
+	private static float getSTDev(float[] data) {
+		float stdev = 0;
+		
+		float avg = getAvg(data);
+		
+		for (int i = 0; i < data.length; i++) {
+			float tmp = (data[i] - avg);
+			
+			stdev += tmp * tmp;
+		}
+		
+		stdev /= data.length;
+		
+		return (float) Math.sqrt(stdev);
+	}
+	
+	private static float getAvg(float[] data) {
+		float avg = 0;
+		
+		for (float f : data) {
+			avg += f;
+		}
+		
+		return avg / data.length;
+	}
+	
 }

@@ -11,4 +11,6 @@ public interface Saveable {
 	
 	public void addLine(int index, String line);
 	
+	public void completeLoad();
+	
 }

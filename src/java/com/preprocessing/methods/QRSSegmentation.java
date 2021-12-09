@@ -12,20 +12,16 @@ import com.preprocessing.file.FileHandler;
 public class QRSSegmentation {
 
 	/**
-	 * Segments and saves the QRS complexes 
+	 * Segments and saves the QRS complexes
 	 * 
 	 * @param data
 	 */
-	public static void segmentQRSComplexes(VoltageRecords data) {
-		File file = new File("src\\resources\\seg");
-		file.delete();
-		file.mkdir();
-
+	public static void segmentQRSComplexes(VoltageRecords data, int fileIndex) {
 		float[] timestamps = data.getTimestamps();
 		float[] voltages = data.getVoltages();
 
 		float[] stats = getStats(voltages);
-		float rPeakThreshold = stats[2] + 5f * (stats[2] - stats[0]);
+		float rPeakThreshold = stats[2] + 3f * (stats[2] - stats[0]);
 
 		int ctr = 0;
 
@@ -63,7 +59,7 @@ public class QRSSegmentation {
 
 			// Prevents memory issues by saving the data and clearing
 			if (pWaveIndices.size() >= 10000) {
-				saveData(pos, pWaveIndices, timestamps, voltages);
+				saveData(pos, pWaveIndices, timestamps, voltages, fileIndex);
 
 				pos += pWaveIndices.size() - 1;
 				int lst = pWaveIndices.get(pWaveIndices.size() - 1);
@@ -75,11 +71,12 @@ public class QRSSegmentation {
 		}
 
 		// Saves the last of the data
-		saveData(pos, pWaveIndices, timestamps, voltages);
+		saveData(pos, pWaveIndices, timestamps, voltages, fileIndex);
 
 	}
 
-	private static void saveData(int pos, List<Integer> pWaveIndices, float[] timestamps, float[] voltages) {
+	private static void saveData(int pos, List<Integer> pWaveIndices, float[] timestamps, float[] voltages,
+			int fileIndex) {
 		for (int i = 0; i < pWaveIndices.size() - 1; i++) {
 			int start = pWaveIndices.get(i);
 			int end = pWaveIndices.get(i + 1);
@@ -92,21 +89,13 @@ public class QRSSegmentation {
 				segData[n] = voltages[n + start];
 			}
 
-			// Normalises
-			float[] stats = getStats(segData);
-			for (int n = 0; n < segData.length; n++) {
-				segData[n] = (segData[n] - stats[3]) / (stats[4] - stats[3]);
-			}
-
-			VoltageRecords record = new VoltageRecords("seg\\Segment" + (pos + i) + ".csv");
+			VoltageRecords record = new VoltageRecords("seg\\Segment" + (pos + i) + "_" + fileIndex +".csv");
 			record.setTimestamps(tsData);
 			record.setVoltages(segData);
 
-			float timeRange = tsData[tsData.length - 1] - tsData[0];
-
 			// Time range makes sure the data would be within 30 BPM and 200 BPM
 			// Assumes other ranges is bad data
-			if (timeRange > 0.3f && timeRange < 2f) {
+			if (isValidData(record)) {
 				try {
 					FileHandler.saveData(record);
 				} catch (IOException e) {
@@ -117,14 +106,45 @@ public class QRSSegmentation {
 
 	}
 
+	private static boolean isValidData(VoltageRecords record) {
+		float[] tsData = record.getTimestamps();
+
+		float timeRange = tsData[tsData.length - 1] - tsData[0];
+
+		if (timeRange < 0.3f || timeRange > 2f) {
+			return false;
+		}
+
+		int maxIndex = -1;
+		float max = Float.MIN_VALUE;
+
+		float[] voltages = record.getVoltages();
+
+		for (int i = 0; i < voltages.length; i++) {
+			if (voltages[i] > max) {
+				max = voltages[i];
+				maxIndex = i;
+			}
+		}
+
+		float prInterval = tsData[maxIndex] - tsData[0];
+
+		if (prInterval >= 0.2f) {
+			return false;
+		}
+
+		return true;
+	}
+
 	/**
-	 * From the R peak, this finds the start of the P wave of the current P-QRS-T complex
+	 * From the R peak, this finds the start of the P wave of the current P-QRS-T
+	 * complex
 	 * 
-	 * @param ctr The current place in the data
-	 * @param median The median value of the voltages
-	 * @param q3 The upper quartile value of the voltages
+	 * @param ctr      The current place in the data
+	 * @param median   The median value of the voltages
+	 * @param q3       The upper quartile value of the voltages
 	 * @param voltages The voltages
-	 * @return The position of the p wave in the 
+	 * @return The position of the p wave in the
 	 */
 	private static int findPWave(int ctr, float median, float q3, float[] voltages) {
 
@@ -146,9 +166,9 @@ public class QRSSegmentation {
 	/**
 	 * Finds the next R peak in the data
 	 * 
-	 * @param ctr The current position
+	 * @param ctr            The current position
 	 * @param rPeakThreshold The threshold for what constitutes an R peak
-	 * @param voltages the voltages of the ECG data
+	 * @param voltages       the voltages of the ECG data
 	 * @return The position of the R peak
 	 */
 	private static int findRPeak(int ctr, float rPeakThreshold, float[] voltages) {
@@ -166,8 +186,8 @@ public class QRSSegmentation {
 	/**
 	 * Skips the rest of the R peak
 	 * 
-	 * @param ctr The current position
-	 * @param median The median value of the voltages
+	 * @param ctr      The current position
+	 * @param median   The median value of the voltages
 	 * @param voltages The voltage data from the ECG
 	 * @return The new position
 	 */
